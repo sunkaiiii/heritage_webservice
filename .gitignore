@@ -3,6 +3,12 @@
 *.dll
 *.so
 *.dylib
+*.jpg
+*.png
+*.pem
+*.gif
+*.log
+
 
 # Test binary, build with `go test -c`
 *.test
