@@ -219,7 +219,7 @@ func GetSearchUserInfo(name string) string {
 		return ERROR
 	}
 	sql = "select id,user_name from user_info where user_name like ?"
-	rows, err := DB.Query(sql, name)
+	rows, err := DB.Query(sql, searchName)
 	defer rows.Close()
 	if err != nil {
 		log.Println(err.Error())
