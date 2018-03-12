@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -306,4 +307,57 @@ func getUserNameByUserID(userID int) string {
 		return ERROR
 	}
 	return userName
+}
+
+func AddUserCollection(userID int, collectionType string, typeID int) string {
+	sql := "INSERT INTO my_collection(user_id,type,type_id) VALUES(?,?,?)"
+	result, err := DB.Exec(sql, userID, collectionType, typeID)
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	affectNum, err := result.RowsAffected()
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	if affectNum > 0 {
+		log.Println("user:" + strconv.Itoa(userID) + "添加了收藏:" + collectionType + " " + strconv.Itoa(typeID))
+		return SUCCESS
+	}
+	return ERROR
+}
+
+func GetUserCollection(userID int, collectionType string) string {
+	sql := "SELECT COUNT(id) from my_collection where user_id=? and type=?"
+	var count int
+	err := DB.QueryRow(sql, userID, collectionType).Scan(&count)
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	sql = "SELECT type,type_id from my_collection where user_id=? and type=?"
+	resultList := make([]CollectionInfo, count)
+	rows, err := DB.Query(sql, userID, collectionType)
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	defer rows.Close()
+	for i := 0; rows.Next(); i++ {
+		var data CollectionInfo
+		err = rows.Scan(&data.CollectionType, &data.TypeID)
+		if err != nil {
+			log.Println(err.Error())
+			return ERROR
+		}
+		resultList[i] = data
+	}
+	jsonResult, err := json.Marshal(resultList)
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	jsonString := string(jsonResult)
+	return jsonString
 }

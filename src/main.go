@@ -72,5 +72,7 @@ func main() {
 	router.GET("/GetSearchUserInfo", controllers.GetSearchUserInfo)
 	router.GET("/GetUserImage", controllers.GetUserImage)
 	router.POST("/UpdateUserImage", controllers.UpdateUserImage)
+	router.GET("/AddUserCollection", controllers.AddUserCollection)
+	router.GET("/GetUserCollection", controllers.GetUserCollection)
 	router.Run()
 }

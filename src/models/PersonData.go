@@ -20,3 +20,8 @@ type SearchInfo struct {
 	ID       int    `json:"id"`
 	UserName string `json:"userName"`
 }
+
+type CollectionInfo struct {
+	CollectionType string `json:"collectionType"`
+	TypeID         int    `json:"typeID"`
+}

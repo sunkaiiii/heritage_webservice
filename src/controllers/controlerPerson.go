@@ -183,3 +183,31 @@ func UpdateUserImage(c *gin.Context) {
 	imageString := c.PostForm("image")
 	c.String(200, models.UpdateUserImage(userID, imageString))
 }
+
+func AddUserCollection(c *gin.Context) {
+	userID, err := strconv.Atoi(c.Query("userID"))
+	if err != nil {
+		log.Println("userID有误")
+		c.String(200, ERROR)
+		return
+	}
+	typeID, err := strconv.Atoi(c.Query("typeID"))
+	if err != nil {
+		log.Println("typeID")
+		c.String(200, ERROR)
+		return
+	}
+	collectType := c.Query("type")
+	c.String(200, models.AddUserCollection(userID, collectType, typeID))
+}
+
+func GetUserCollection(c *gin.Context) {
+	userID, err := strconv.Atoi(c.Query("userID"))
+	if err != nil {
+		log.Println("userID有误")
+		c.String(200, ERROR)
+		return
+	}
+	collectType := c.Query("type")
+	c.String(200, models.GetUserCollection(userID, collectType))
+}
