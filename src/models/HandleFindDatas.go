@@ -401,9 +401,9 @@ func GetUserCommentInformaitonByOwn(userID int, start int) string {
 }
 
 func getAllUserCommentInfoClass(userID int, commentID int) (UserCommentData, error) {
-	sql := "SELECT id,user_id,comment_time,comment_title,comment_content,comment_image_url from user_comment where id=?"
+	sql := "SELECT id,user_id,user_name,comment_time,comment_title,comment_content,comment_image_url from user_comment where id=?"
 	var data UserCommentData
-	err := DB.QueryRow(sql, commentID).Scan(&data.ID, &data.UserID, &data.CommentTime, &data.CommentTitle, &data.ComemntContent, &data.ImageURL)
+	err := DB.QueryRow(sql, commentID).Scan(&data.ID, &data.UserID, &data.UserName, &data.CommentTime, &data.CommentTitle, &data.ComemntContent, &data.ImageURL)
 	if err != nil {
 		log.Println(err.Error())
 		return data, err
@@ -416,9 +416,9 @@ func getAllUserCommentInfoClass(userID int, commentID int) (UserCommentData, err
 }
 
 func GetAllUserCommentInfoByID(user int, commentID int) string {
-	sql := "SELECT id,user_id,comment_time,comment_title,comment_content,comment_image_url from user_comment where id=?"
+	sql := "SELECT id,user_id,user_name,comment_time,comment_title,comment_content,comment_image_url from user_comment where id=?"
 	var data UserCommentData
-	err := DB.QueryRow(sql, commentID).Scan(&data.ID, &data.UserID, &data.CommentTime, &data.CommentTitle, &data.ComemntContent, &data.ImageURL)
+	err := DB.QueryRow(sql, commentID).Scan(&data.ID, &data.UserID, &data.UserName, &data.CommentTime, &data.CommentTitle, &data.ComemntContent, &data.ImageURL)
 	if err != nil {
 		log.Println(err.Error())
 		return ERROR
