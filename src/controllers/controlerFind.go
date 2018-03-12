@@ -288,3 +288,13 @@ func DeleteUserCommentReply(c *gin.Context) {
 	}
 	c.String(200, models.DeleteUserCommentReply(replyID))
 }
+
+func GetUserLikeComment(c *gin.Context) {
+	userID, err := strconv.Atoi(c.Query("userID"))
+	if err != nil {
+		log.Println("userID有误")
+		c.String(200, ERROR)
+		return
+	}
+	c.String(200, models.GetUserLikeComment(userID))
+}

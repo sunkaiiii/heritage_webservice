@@ -400,10 +400,29 @@ func GetUserCommentInformaitonByOwn(userID int, start int) string {
 	return jsonString
 }
 
+func getAllUserCommentInfoClass(userID int, commentID int) (UserCommentData, error) {
+	sql := "SELECT id,user_id,comment_time,comment_title,comment_content,comment_image_url from user_comment where id=?"
+	var data UserCommentData
+	err := DB.QueryRow(sql, commentID).Scan(&data.ID, &data.UserID, &data.CommentTime, &data.CommentTitle, &data.ComemntContent, &data.ImageURL)
+	if err != nil {
+		log.Println(err.Error())
+		return data, err
+	}
+	data.ReplyNum = GetUserCommentCount(commentID, normalReply)
+	data.IsLike = GetUserIsLike(data.UserID, commentID)
+	data.LikeNum = GetCommentLikeNumber(commentID)
+	data.IsFollow = IsUserFollow(userID, data.UserID)
+	return data, nil
+}
+
 func GetAllUserCommentInfoByID(user int, commentID int) string {
 	sql := "SELECT id,user_id,comment_time,comment_title,comment_content,comment_image_url from user_comment where id=?"
 	var data UserCommentData
 	err := DB.QueryRow(sql, commentID).Scan(&data.ID, &data.UserID, &data.CommentTime, &data.CommentTitle, &data.ComemntContent, &data.ImageURL)
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
 	data.ReplyNum = GetUserCommentCount(commentID, normalReply)
 	data.IsLike = GetUserIsLike(data.UserID, commentID)
 	data.LikeNum = GetCommentLikeNumber(commentID)
@@ -545,4 +564,43 @@ func DeleteUserCommentReply(replyID int) string {
 		return SUCCESS
 	}
 	return ERROR
+}
+
+func GetUserLikeComment(userID int) string {
+	sql := "select COUNT(id) from user_comment_like where userID=?"
+	var count int
+	err := DB.QueryRow(sql, userID).Scan(&count)
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	sql = "select commentID from user_comment_like where userID=?"
+	rows, err := DB.Query(sql, userID)
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	defer rows.Close()
+	var resultList = make([]UserCommentData, count)
+	for i := 0; rows.Next(); i++ {
+		var commentID int
+		err := rows.Scan(&commentID)
+		if err != nil {
+			log.Println(err.Error())
+			return ERROR
+		}
+		data, err := getAllUserCommentInfoClass(userID, commentID)
+		if err != nil {
+			return ERROR
+		}
+		resultList[i] = data
+	}
+	jsonResult, err := json.Marshal(resultList)
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	jsonString := string(jsonResult)
+	log.Println("用户：" + strconv.Itoa(userID) + " 获取我的赞")
+	return jsonString
 }

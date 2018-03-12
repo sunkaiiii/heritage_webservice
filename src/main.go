@@ -74,5 +74,6 @@ func main() {
 	router.POST("/UpdateUserImage", controllers.UpdateUserImage)
 	router.GET("/AddUserCollection", controllers.AddUserCollection)
 	router.GET("/GetUserCollection", controllers.GetUserCollection)
+	router.GET("/GetUserLikeComment", controllers.GetUserLikeComment)
 	router.Run()
 }

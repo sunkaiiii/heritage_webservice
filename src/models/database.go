@@ -34,7 +34,6 @@ func InitDB() (*sql.DB, error) {
 	DB = db
 	client := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
-		Password: "ILOVEKIMI",
 		DB:       0,
 	})
 	pong, err := client.Ping().Result()
