@@ -409,7 +409,7 @@ func getAllUserCommentInfoClass(userID int, commentID int) (UserCommentData, err
 		return data, err
 	}
 	data.ReplyNum = GetUserCommentCount(commentID, normalReply)
-	data.IsLike = GetUserIsLike(data.UserID, commentID)
+	data.IsLike = GetUserIsLike(userID, commentID)
 	data.LikeNum = GetCommentLikeNumber(commentID)
 	data.IsFollow = IsUserFollow(userID, data.UserID)
 	return data, nil
