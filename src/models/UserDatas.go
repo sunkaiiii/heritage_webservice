@@ -7,7 +7,7 @@ type ActivityDivideImage struct {
 }
 
 type ChannelInformaiton struct {
-	Id             int64  `json:"id"`
+	Id             int    `json:"id"`
 	Time           string `json:"time"`
 	Category       string `json:"category"`
 	Location       string `json:"location"`

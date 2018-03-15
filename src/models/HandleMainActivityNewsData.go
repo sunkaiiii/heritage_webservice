@@ -41,6 +41,13 @@ func GetFolkNewsList(category string, start int, end int) string {
 	return jsonString
 }
 
+func getFolkNewsDataClass(id int) (FolkNewsLite, error) {
+	sql := "select id,title,time,category,content,img from folk_news where id=?"
+	var data FolkNewsLite
+	err := DB.QueryRow(sql, id).Scan(&data.ID, &data.Title, &data.Time, &data.Category, &data.Content, &data.Img)
+	return data, err
+}
+
 func GetFolkNewsInformation(id int) string {
 	key := "folknewsInformation" + "_" + strconv.Itoa(id)
 	result, err := RedisDB.Get(key).Result()
@@ -57,7 +64,12 @@ func GetFolkNewsInformation(id int) string {
 	RedisDB.Set(key, data, 0)
 	return data
 }
-
+func getBottomNewsInformationClassByID(id int) (BottomNewsLite, error) {
+	sql := "select id,title,time,news_briefly,img from bottom_folk_news where id=?"
+	var data BottomNewsLite
+	err := DB.QueryRow(sql, id).Scan(&data.ID, &data.Title, &data.Time, &data.Briefly, &data.Img)
+	return data, err
+}
 func GetBottomNewsLiteInformation(start int, end int) string {
 	key := "bottomNewsLiteInfor_" + strconv.Itoa(start) + "_" + strconv.Itoa(end)
 	result, err := RedisDB.Get(key).Result()

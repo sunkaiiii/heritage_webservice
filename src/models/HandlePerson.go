@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+const TYPE_MAIN = "首页新闻"
+const TYPE_FOCUS_HERITAGE = "聚焦非遗"
+const TYPE_FOLK = "民间"
+const TYPE_FIND = "发现"
+
 func GetFollowNumber(userID int) int {
 	sql := "select count(id) from my_focus where focus_userID=?"
 	var count int
@@ -328,6 +333,25 @@ func AddUserCollection(userID int, collectionType string, typeID int) string {
 	return ERROR
 }
 
+func CancelUserCollect(userID int, collectionType string, typeID int) string {
+	sql := "DELETE from my_collection where user_id=? and type=? and type_id=?"
+	result, err := DB.Exec(sql, userID, collectionType, typeID)
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	affectNum, err := result.RowsAffected()
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	if affectNum > 0 {
+		log.Println("user:" + strconv.Itoa(userID) + "删除了收藏:" + collectionType + " " + strconv.Itoa(typeID))
+		return SUCCESS
+	}
+	return ERROR
+}
+
 func GetUserCollection(userID int, collectionType string) string {
 	sql := "SELECT COUNT(id) from my_collection where user_id=? and type=?"
 	var count int
@@ -337,18 +361,110 @@ func GetUserCollection(userID int, collectionType string) string {
 		return ERROR
 	}
 	sql = "SELECT type,type_id from my_collection where user_id=? and type=?"
-	resultList := make([]CollectionInfo, count)
 	rows, err := DB.Query(sql, userID, collectionType)
 	if err != nil {
 		log.Println(err.Error())
 		return ERROR
 	}
 	defer rows.Close()
+	resultList := make([]CollectionInfo, count)
 	for i := 0; rows.Next(); i++ {
 		var data CollectionInfo
 		err = rows.Scan(&data.CollectionType, &data.TypeID)
 		if err != nil {
 			log.Println(err.Error())
+			return ERROR
+		}
+		resultList[i] = data
+	}
+	if collectionType == TYPE_FOLK {
+		return getFolkCollectionInfo(resultList, count)
+	} else if collectionType == TYPE_MAIN {
+		return getMainPageCollectInfo(resultList, count)
+	} else if collectionType == TYPE_FOCUS_HERITAGE {
+		return getBottomNewsCollectInfo(resultList, count)
+	} else if collectionType == TYPE_FIND {
+		return getFindCollectInfo(userID, resultList, count)
+	}
+	log.Println("用户:" + strconv.Itoa(userID) + "查询collect" + collectionType)
+	return ERROR
+}
+
+func CheckIsCollection(userID int, typeName string, typeID int) string {
+	sql := "select id from my_collection where user_id=? and type=? and type_id=?"
+	rows, err := DB.Query(sql, userID, typeName, typeID)
+	defer rows.Close()
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	if rows.Next() {
+		return SUCCESS
+	}
+	return ERROR
+}
+
+func getMainPageCollectInfo(data []CollectionInfo, count int) string {
+	resultList := make([]FolkNewsLite, count)
+	for i := 0; i < count; i++ {
+		var id = data[i].TypeID
+		data, err := getFolkNewsDataClass(id)
+		if err != nil {
+			return ERROR
+		}
+		resultList[i] = data
+	}
+	jsonResult, err := json.Marshal(resultList)
+	if err != nil {
+		return ERROR
+	}
+	jsonString := string(jsonResult)
+	return jsonString
+}
+
+func getBottomNewsCollectInfo(data []CollectionInfo, count int) string {
+	resultList := make([]BottomNewsLite, count)
+	for i := 0; i < count; i++ {
+		var id = data[i].TypeID
+		data, err := getBottomNewsInformationClassByID(id)
+		if err != nil {
+			return ERROR
+		}
+		resultList[i] = data
+	}
+	jsonResult, err := json.Marshal(resultList)
+	if err != nil {
+		return ERROR
+	}
+	jsonString := string(jsonResult)
+	return jsonString
+}
+
+func getFolkCollectionInfo(data []CollectionInfo, count int) string {
+	resultList := make([]ChannelInformaiton, count)
+	for i := 0; i < count; i++ {
+		var typeID = data[i].TypeID
+		folkdata, err := getChannelInformationSingleClass(typeID)
+		if err != nil {
+			return ERROR
+		}
+		resultList[i] = folkdata
+	}
+	jsonResult, err := json.Marshal(resultList)
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	jsonString := string(jsonResult)
+	return jsonString
+}
+
+func getFindCollectInfo(userID int, data []CollectionInfo, count int) string {
+	resultList := make([]UserCommentData, count)
+	for i := 0; i < count; i++ {
+		var typeID = data[i].TypeID
+		data, err := getAllUserCommentInfoClass(userID, typeID)
+		if err != nil {
 			return ERROR
 		}
 		resultList[i] = data

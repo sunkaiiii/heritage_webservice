@@ -75,5 +75,7 @@ func main() {
 	router.GET("/AddUserCollection", controllers.AddUserCollection)
 	router.GET("/GetUserCollection", controllers.GetUserCollection)
 	router.GET("/GetUserLikeComment", controllers.GetUserLikeComment)
+	router.GET("/CancelUserCollect", controllers.CancelUserCollect)
+	router.GET("/CheckIsCollection", controllers.CheckIsCollection)
 	router.Run()
 }

@@ -35,6 +35,13 @@ func GetMainDivideActivityImageUrl() string {
 	return string(json)
 }
 
+func getChannelInformationSingleClass(id int) (ChannelInformaiton, error) {
+	sql := "SELECT id,time,category,location,apply_location,content,number,img,title from classify_activity_new where id=?"
+	var data ChannelInformaiton
+	err := DB.QueryRow(sql, id).Scan(&data.Id, &data.Time, &data.Category, &data.Location, &data.Apply_location, &data.Content, &data.Number, &data.Img, &data.Title)
+	return data, err
+}
+
 func GetChannelInformation(divide string) string {
 	key := "Channel" + divide
 	result, err := RedisDB.Get(key).Result()
