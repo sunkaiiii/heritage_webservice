@@ -6,21 +6,21 @@ import (
 	"strconv"
 )
 
-func GetFolkNewsList(category string, start int, end int) string {
-	key := "MainActivityNews" + category + strconv.Itoa(start) + "_" + strconv.Itoa(end)
+func GetFolkNewsList(category string, start int, count int) string {
+	key := "MainActivityNews" + category + strconv.Itoa(start) + "_" + strconv.Itoa(count)
 	result, err := RedisDB.Get(key).Result()
 	if err == nil {
 		return result
 	}
 	sql := "select id,title,time,category,content,img from folk_news where category=? LIMIT ?,?"
-	rows, err := DB.Query(sql, category, start, (end - start))
+	rows, err := DB.Query(sql, category, start, count)
 	defer rows.Close()
 	if err != nil {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultArray := make([]FolkNewsLite, end-start)
-	count := 0
+	resultArray := make([]FolkNewsLite, count)
+	index := 0
 	for rows.Next() {
 		var data FolkNewsLite
 		err = rows.Scan(&data.ID, &data.Title, &data.Time, &data.Category, &data.Content, &data.Img)
@@ -28,10 +28,10 @@ func GetFolkNewsList(category string, start int, end int) string {
 			log.Println(err.Error())
 			return ERROR
 		}
-		resultArray[count] = data
-		count++
+		resultArray[index] = data
+		index++
 	}
-	jsonResult, err := json.Marshal(resultArray[0:count])
+	jsonResult, err := json.Marshal(resultArray)
 	if err != nil {
 		log.Println(err.Error())
 		return ERROR
@@ -70,14 +70,13 @@ func getBottomNewsInformationClassByID(id int) (BottomNewsLite, error) {
 	err := DB.QueryRow(sql, id).Scan(&data.ID, &data.Title, &data.Time, &data.Briefly, &data.Img)
 	return data, err
 }
-func GetBottomNewsLiteInformation(start int, end int) string {
-	key := "bottomNewsLiteInfor_" + strconv.Itoa(start) + "_" + strconv.Itoa(end)
+func GetBottomNewsLiteInformation(start int, count int) string {
+	key := "bottomNewsLiteInfor_" + strconv.Itoa(start) + "_" + strconv.Itoa(count)
 	result, err := RedisDB.Get(key).Result()
 	if err == nil {
 		return result
 	}
 	sql := "select id,title,time,news_briefly,img from bottom_folk_news LIMIT ?,?"
-	count := end - start
 	rows, err := DB.Query(sql, start, count)
 	defer rows.Close()
 	if err != nil {
