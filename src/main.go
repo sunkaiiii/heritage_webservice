@@ -77,5 +77,8 @@ func main() {
 	router.GET("/GetUserLikeComment", controllers.GetUserLikeComment)
 	router.GET("/CancelUserCollect", controllers.CancelUserCollect)
 	router.GET("/CheckIsCollection", controllers.CheckIsCollection)
+	router.POST("/AddPushMessage", controllers.AddPushMessage)
+	router.GET("/GetPushMessage", controllers.GetPushMessage)
+	router.GET("/GetAllPushReplyInfo", controllers.GetAllPushReplyInfo)
 	router.Run()
 }
