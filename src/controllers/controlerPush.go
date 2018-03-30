@@ -42,7 +42,7 @@ func GetPushMessage(c *gin.Context) {
 		c.String(200, ERROR)
 		return
 	}
-	c.String(200, models.SendPush(userID))
+	c.String(200, models.SendSinglePushMessageInfo(userID))
 }
 
 func GetAllPushReplyInfo(c *gin.Context) {

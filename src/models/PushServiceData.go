@@ -16,8 +16,8 @@ type PushReplyData struct {
 type PushMessageData struct {
 	ID                   int    `json:"id"`
 	UserID               int    `json:"userID"`
-	UserName             string `json"userName"`
-	ReplyCommentID       int    `json:"replyComemntID"`
+	UserName             string `json:"userName"`
+	ReplyCommentID       int    `json:"replyCommentID"`
 	ReplyContent         string `json:"replyContent"`
 	ReplyTime            string `json:"replyTime"`
 	OriginalReplyContent string `json:"originalReplyContent"`

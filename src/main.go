@@ -19,6 +19,7 @@ func main() {
 	f, _ := os.Create("gin.log")
 	gin.DefaultWriter = io.MultiWriter(f) //将log打印到文件
 	router := gin.Default()
+	go models.StartPushService()
 	router.Static("/img", "./img") //发布图片文件夹
 	router.GET("/GetUserName", controllers.GetUserName)
 	router.POST("/Sign_In", controllers.Sign_In)

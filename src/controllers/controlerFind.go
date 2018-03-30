@@ -264,7 +264,6 @@ func AddUserCommentReply(c *gin.Context) {
 		return
 	}
 	reply := c.PostForm("reply")
-	// intentString := c.PostForm("intentString") //用于推送消息的
 	c.String(200, models.AddUserCommentReply(userID, commentID, reply))
 }
 
