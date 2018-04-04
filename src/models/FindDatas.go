@@ -14,6 +14,7 @@ type UserCommentData struct {
 	UserID         int    `json:"userID"`
 	IsLike         string `json:"isLike"`
 	IsFollow       string `json:"isFollow"`
+	IsCollect      string `json:"isCollect"`
 	LikeNum        int    `json:"likeNum"`
 	ReplyNum       int    `json:"replyNum"`
 	ImageURL       string `json:"imageUrl"`

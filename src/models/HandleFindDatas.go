@@ -412,6 +412,7 @@ func getAllUserCommentInfoClass(userID int, commentID int) (UserCommentData, err
 	data.IsLike = GetUserIsLike(userID, commentID)
 	data.LikeNum = GetCommentLikeNumber(commentID)
 	data.IsFollow = IsUserFollow(userID, data.UserID)
+	data.IsCollect = CheckIsCollection(userID, TYPE_FIND, commentID)
 	return data, nil
 }
 
