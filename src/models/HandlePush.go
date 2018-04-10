@@ -148,6 +148,7 @@ func handleConnect(c net.Conn, socketID int) {
 		return
 	}
 	userID := string(buf[0:n])
+	log.Println("用户连接:" + userID)
 	SetRedisKey(push_user_id+userID, strconv.Itoa(socketID))
 	defer DeleteRedisKey(push_user_id + userID)
 	if err != nil {

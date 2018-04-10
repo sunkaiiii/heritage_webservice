@@ -18,6 +18,7 @@ func main() {
 	// router.GET("/GetUserID", getting)
 	f, _ := os.Create("gin.log")
 	gin.DefaultWriter = io.MultiWriter(f) //将log打印到文件
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	go models.StartPushService()
 	router.Static("/img", "./img") //发布图片文件夹
