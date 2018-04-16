@@ -15,7 +15,6 @@ func main() {
 		return
 	}
 	defer db.Close()
-	// router.GET("/GetUserID", getting)
 	f, _ := os.Create("gin.log")
 	gin.DefaultWriter = io.MultiWriter(f) //将log打印到文件
 	gin.SetMode(gin.ReleaseMode)

@@ -114,7 +114,7 @@ func CheckIsHadUser(username string) (bool, error) {
 }
 
 func RegistUser(username string, password string, findPasswordQuestion string, findPasswordAnswer string, userImage string, isHadImage int64) error {
-	sql := "insert into USER_INFO(USER_NAME,USER_PASSWORD,USER_PASSWORD_QUESTION,USER_PASSWORD_ANSWER,USER_IMAGE,USER_IMAGE_URL,USER_IS_HAD_IMAGE) VALUES (?,?,?,?,?,?,?)"
+	sql := "insert into USER_INFO(USER_NAME,USER_PASSWORD,USER_PASSWORD_QUESTION,USER_PASSWORD_ANSWER,USER_IMAGE_URL,USER_IS_HAD_IMAGE) VALUES (?,?,?,?,?,?,?)"
 	var saveUrl string
 	if isHadImage == 1 {
 		imageByte, err := base64.StdEncoding.DecodeString(userImage)
@@ -130,7 +130,7 @@ func RegistUser(username string, password string, findPasswordQuestion string, f
 	} else {
 		saveUrl = ""
 	}
-	_, err := DB.Exec(sql, username, password, findPasswordQuestion, findPasswordAnswer, userImage, saveUrl, isHadImage)
+	_, err := DB.Exec(sql, username, password, findPasswordQuestion, findPasswordAnswer, saveUrl, isHadImage)
 	if err != nil {
 		log.Println(err.Error())
 		return err

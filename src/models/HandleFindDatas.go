@@ -80,7 +80,7 @@ func GetFindActivityInformation(id int) string {
 }
 
 func AddUserCommentInformation(userID int, commentTitle string, commentContent string, commentImage string) string {
-	sql := "insert into user_comment(user_id,comment_time,comment_title,comment_content,comment_image,comment_image_url) VALUES (?,?,?,?,?,?)"
+	sql := "insert into user_comment(user_id,comment_time,comment_title,comment_content,comment_image_url) VALUES (?,?,?,?,?,?)"
 	imageByte, err := base64.StdEncoding.DecodeString(commentImage)
 	if err != nil {
 		log.Println(err.Error())
@@ -92,7 +92,7 @@ func AddUserCommentInformation(userID int, commentTitle string, commentContent s
 		return ERROR
 	}
 	commentTime := time.Now().Format("2006-01-02 15:04:05")
-	_, err = DB.Exec(sql, userID, commentTime, commentTitle, commentContent, commentImage, commentImageUrl)
+	_, err = DB.Exec(sql, userID, commentTime, commentTitle, commentContent, commentImageUrl)
 	if err != nil {
 		log.Println(err.Error())
 		return ERROR
@@ -237,8 +237,8 @@ func UpdateUserCommentImage(id int, imgString string) string {
 		log.Println("保存图片失败")
 		return ERROR
 	}
-	sql := "update user_comment set comment_image=?,comment_image_url=? where id=?"
-	_, err = DB.Exec(sql, img, commentImageUrl, id)
+	sql := "update user_comment set comment_image_url=? where id=?"
+	_, err = DB.Exec(sql, commentImageUrl, id)
 	if err != nil {
 		log.Println("更新帖子：" + strconv.Itoa(id) + " 失败")
 		return ERROR
@@ -252,7 +252,7 @@ func UpdateUserCommentInformaiton(id int,
 	commentTitle string,
 	comemntContent string,
 	commentImage string) string {
-	sql := "update user_comment set comment_title=?,comment_content=?,comment_image=?,comment_image_url=? where id=?"
+	sql := "update user_comment set comment_title=?,comment_content=?,comment_image_url=? where id=?"
 	imgByte, err := base64.StdEncoding.DecodeString(commentImage)
 	if err != nil {
 		log.Println(err.Error())
@@ -263,7 +263,7 @@ func UpdateUserCommentInformaiton(id int,
 		log.Println("保存图片错误")
 		return ERROR
 	}
-	result, err := DB.Exec(sql, commentTitle, comemntContent, imgByte, commentImageUrl, id)
+	result, err := DB.Exec(sql, commentTitle, comemntContent, commentImageUrl, id)
 	if err != nil {
 		log.Println(err.Error())
 		return ERROR

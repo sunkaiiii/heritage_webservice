@@ -121,10 +121,12 @@ func StartPushService() {
 	socket_count := 0
 	socket_map = map[int]net.Conn{}
 	listen, err := net.Listen("tcp", ":8088")
+	defer listen.Close()
 	if err != nil {
-		log.Println(err.Error())
+		log.Println("listen error " + err.Error())
 		return
 	}
+	log.Println("Socket等待连接....")
 	for {
 		c, err := listen.Accept()
 		if err != nil {

@@ -266,7 +266,7 @@ func GetUserImage(userID int) string {
 }
 
 func UpdateUserImage(userID int, imageString string) string {
-	sql := "UPDATE USER_INFO set user_image=?,user_image_url=?,USER_IS_HAD_IMAGE=?,USER_UPDATE_TIME=? where id=?"
+	sql := "UPDATE USER_INFO set user_image_url=?,USER_IS_HAD_IMAGE=?,USER_UPDATE_TIME=? where id=?"
 	imgByte, err := base64.StdEncoding.DecodeString(imageString)
 	if err != nil {
 		log.Println("用户图片错误:" + err.Error())
@@ -279,7 +279,7 @@ func UpdateUserImage(userID int, imageString string) string {
 	}
 	updateTime := time.Now().Format("2006-01-02 15:04:05")
 	hadImage := 1
-	result, err := DB.Exec(sql, imgByte, sqlUrl, hadImage, updateTime, userID)
+	result, err := DB.Exec(sql, sqlUrl, hadImage, updateTime, userID)
 	if err != nil {
 		log.Println(err.Error())
 		return ERROR
