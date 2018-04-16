@@ -100,10 +100,11 @@ func Sign_In(userName string, password string) (int, error) {
 }
 
 func CheckIsHadUser(username string) (bool, error) {
-	sql := "SELECT COUNT(USER_NAME) from USER_INFO where USER_NAME=?"
-	var result int
+	sql := "SELECT COUNT(id) from USER_INFO where USER_NAME=?"
+	result := 0
 	err := DB.QueryRow(sql, username).Scan(&result)
 	if err != nil {
+		log.Println(err.Error())
 		return true, err
 	}
 	if result >= 1 {
