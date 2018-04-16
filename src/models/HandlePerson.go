@@ -266,7 +266,7 @@ func GetUserImage(userID int) string {
 }
 
 func UpdateUserImage(userID int, imageString string) string {
-	sql := "UPDATE USER_INFO set user_image_url=?,USER_IS_HAD_IMAGE=?,USER_UPDATE_TIME=? where id=?"
+	sql := "UPDATE user_info set user_image_url=?,USER_IS_HAD_IMAGE=?,USER_UPDATE_TIME=? where id=?"
 	imgByte, err := base64.StdEncoding.DecodeString(imageString)
 	if err != nil {
 		log.Println("用户图片错误:" + err.Error())
