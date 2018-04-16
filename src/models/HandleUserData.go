@@ -100,7 +100,7 @@ func Sign_In(userName string, password string) (int, error) {
 }
 
 func CheckIsHadUser(username string) (bool, error) {
-	sql := "SELECT COUNT(id) from USER_INFO where USER_NAME=?"
+	sql := "SELECT COUNT(id) from user_info where USER_NAME=?"
 	result := 0
 	err := DB.QueryRow(sql, username).Scan(&result)
 	if err != nil {
@@ -115,7 +115,7 @@ func CheckIsHadUser(username string) (bool, error) {
 }
 
 func RegistUser(username string, password string, findPasswordQuestion string, findPasswordAnswer string, userImage string, isHadImage int64) error {
-	sql := "insert into USER_INFO(USER_NAME,USER_PASSWORD,USER_PASSWORD_QUESTION,USER_PASSWORD_ANSWER,USER_IMAGE_URL,USER_IS_HAD_IMAGE) VALUES (?,?,?,?,?,?)"
+	sql := "insert into user_info(USER_NAME,USER_PASSWORD,USER_PASSWORD_QUESTION,USER_PASSWORD_ANSWER,USER_IMAGE_URL,USER_IS_HAD_IMAGE) VALUES (?,?,?,?,?,?)"
 	var saveUrl string
 	if isHadImage == 1 {
 		imageByte, err := base64.StdEncoding.DecodeString(userImage)
