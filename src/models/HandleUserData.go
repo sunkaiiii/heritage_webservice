@@ -104,7 +104,7 @@ func CheckIsHadUser(username string) (bool, error) {
 	rows, err := DB.Query(sql, username)
 	defer rows.Close()
 	if err != nil {
-		return true, err
+		return true, nil
 	}
 	if rows.Next() {
 		return true, nil
