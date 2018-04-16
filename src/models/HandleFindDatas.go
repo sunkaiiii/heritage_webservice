@@ -80,7 +80,7 @@ func GetFindActivityInformation(id int) string {
 }
 
 func AddUserCommentInformation(userID int, commentTitle string, commentContent string, commentImage string) string {
-	sql := "insert into user_comment(user_id,comment_time,comment_title,comment_content,comment_image_url) VALUES (?,?,?,?,?,?)"
+	sql := "insert into user_comment(user_id,comment_time,comment_title,comment_content,comment_image_url) VALUES (?,?,?,?,?)"
 	imageByte, err := base64.StdEncoding.DecodeString(commentImage)
 	if err != nil {
 		log.Println(err.Error())
