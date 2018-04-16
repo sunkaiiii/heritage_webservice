@@ -103,9 +103,9 @@ func CheckIsHadUser(username string) (bool, error) {
 	sql := "SELECT USER_NAME from USER_INFO where USER_NAME=?"
 	rows, err := DB.Query(sql, username)
 	defer rows.Close()
-	if err != nil {
-		return true, nil
-	}
+	// if err != nil {
+	// 	return true, err
+	// }
 	if rows.Next() {
 		return true, nil
 	} else {
