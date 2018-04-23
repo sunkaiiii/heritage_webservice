@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"log"
@@ -53,32 +54,6 @@ func GetFindActivityID() string {
 	return jsonString
 }
 
-func GetFindActivityInformation(id int) string {
-	key := "GetFindActivityInformation" + strconv.Itoa(id)
-	result, err := GetRedisKey(key)
-	if err == nil {
-		return result
-	}
-	sql := "select title,content,image from find_activity where id=?"
-	var data FindActivityData
-	var imageByte []byte
-	err = DB.QueryRow(sql, id).Scan(&data.Title, &data.Content, &imageByte)
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	imageBase64 := base64.StdEncoding.EncodeToString(imageByte)
-	data.Image = imageBase64
-	jsonResult, err := json.Marshal(data)
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	jsonString := string(jsonResult)
-	SetRedisKey(key, result)
-	return string(jsonString)
-}
-
 func AddUserCommentInformation(userID int, commentTitle string, commentContent string, commentImage string, location string) string {
 	sql := "insert into user_comment(user_id,comment_time,comment_title,comment_content,comment_image_url,comment_location) VALUES (?,?,?,?,?,?)"
 	imageByte, err := base64.StdEncoding.DecodeString(commentImage)
@@ -128,8 +103,37 @@ func GetUserIsLike(userID int, commentID int) string {
 	return ERROR
 }
 
+func getCommentInformation(userID int, resultArray *[]UserCommentData, rows *sql.Rows) (int, error) {
+	count := 0
+	for rows.Next() {
+		var data UserCommentData
+		err := rows.Scan(&data.ID, &data.UserID, &data.UserName, &data.CommentTime, &data.CommentTitle, &data.ComemntContent, &data.ImageURL, &data.Location)
+		if err != nil {
+			log.Println(err.Error())
+			return 0, err
+		}
+		data.IsFollow = IsUserFollow(userID, data.UserID)
+		data.IsLike = GetUserIsLike(userID, data.ID)
+		data.LikeNum = GetCommentLikeNumber(data.ID)
+		data.ReplyNum = GetUserCommentCount(data.ID, normalReply)
+		(*resultArray)[count] = data
+		count++
+	}
+	return count, nil
+}
+
+func masharlData(marshalData interface{}) string {
+	jsonResult, err := json.Marshal(marshalData)
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	jsonString := string(jsonResult)
+	return jsonString
+}
+
 func GetUserCommentInformation(userID int, start int) string {
-	sql := "SELECT  user_comment.id,user_id,user_name,comment_time,comment_title,comment_content,comment_image_url " +
+	sql := "SELECT  user_comment.id,user_id,user_name,comment_time,comment_title,comment_content,comment_image_url,comment_location " +
 		"from user_comment,user_info where user_id=user_info.ID order by id DESC LIMIT ?,20"
 	rows, err := DB.Query(sql, start)
 	defer rows.Close()
@@ -137,39 +141,61 @@ func GetUserCommentInformation(userID int, start int) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	count := 0
 	resultArray := make([]UserCommentData, 20)
-	for rows.Next() {
-		var data UserCommentData
-		err = rows.Scan(&data.ID, &data.UserID, &data.UserName, &data.CommentTime, &data.CommentTitle, &data.ComemntContent, &data.ImageURL)
-		if err != nil {
-			log.Println(err.Error())
-			return ERROR
-		}
-		data.IsFollow = IsUserFollow(userID, data.UserID)
-		data.IsLike = GetUserIsLike(userID, data.ID)
-		sql = "SELECT COUNT(*) from user_comment_like where commentID=?"
-		err = DB.QueryRow(sql, data.ID).Scan(&data.LikeNum)
-		if err != nil {
-			log.Println(err.Error())
-			data.LikeNum = 0
-		}
-		sql = "SELECT COUNT(*) from user_comment_reply where comment_ID=?"
-		err = DB.QueryRow(sql, data.ID).Scan(&data.ReplyNum)
-		if err != nil {
-			log.Println(err.Error())
-			data.ReplyNum = 0
-		}
-		resultArray[count] = data
-		count++
+	count, err := getCommentInformation(userID, &resultArray, rows)
+	if err != nil {
+		return ERROR
 	}
-	jsonResult, err := json.Marshal(resultArray[0:count])
+	return masharlData(resultArray[0:count])
+}
+func GetUserCommentInformationByUser(userID int, start int) string {
+	sql := "SELECT user_comment.id,user_id,user_name,comment_time,comment_title,comment_content,comment_image_url,comment_location from user_comment,user_info where user_id in (select focus_fansID from my_focus where focus_userID=?) and user_id=user_info.ID order by id DESC LIMIT ?,20"
+	rows, err := DB.Query(sql, userID, start)
+	defer rows.Close()
+	if err != nil {
+		log.Panicln(err.Error())
+		return ERROR
+	}
+	resultList := make([]UserCommentData, 20)
+	count, err := getCommentInformation(userID, &resultList, rows)
+	if err != nil {
+		return ERROR
+	}
+	return masharlData(resultList[0:count])
+}
+
+func GetUserCommentInformaitonByOwn(userID int, start int) string {
+	sql := "SELECT user_comment.id,user_id,user_name,comment_time,comment_title,comment_content,comment_image_url,comment_location " +
+		"from user_comment,user_info where user_id=? and user_id=user_info.id order by id DESC LIMIT ?,20"
+	rows, err := DB.Query(sql, userID, start)
+	defer rows.Close()
 	if err != nil {
 		log.Println(err.Error())
 		return ERROR
 	}
-	jsonString := string(jsonResult)
-	return jsonString
+	resultList := make([]UserCommentData, 20)
+	count, err := getCommentInformation(userID, &resultList, rows)
+	if err != nil {
+		return ERROR
+	}
+	return masharlData(resultList[0:count])
+}
+
+func GetUserCommentInformationBySameLocation(userID int, start int, location string) string {
+	sql := "SELECT user_comment.id,user_id,user_name,comment_time,comment_title,comment_content,comment_image_url,comment_location " +
+		"from user_comment,user_info where user_id=user_info.ID and comment_location=? order by id DESC LIMIT ?,20"
+	rows, err := DB.Query(sql, location, start)
+	defer rows.Close()
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	resultList := make([]UserCommentData, 20)
+	count, err := getCommentInformation(userID, &resultList, rows)
+	if err != nil {
+		return ERROR
+	}
+	return masharlData(resultList[0:count])
 }
 
 func deleteUserCommentReplyByCommentIDChan(id int, deleteCommentInfo chan string) {
@@ -192,12 +218,25 @@ func deleteFromUserCommentLikeByCommentIDChan(id int, deleteCommentLikeInfo chan
 	}
 }
 
+func deleteUserCommentMessageByCommentIDChan(id int, deleteCommentLikeInfo chan string) {
+	sql := "delete from user_comment_push_reply where replyCommentID=?"
+	_, err := DB.Exec(sql, id)
+	if err != nil {
+		log.Println(err.Error())
+		deleteCommentLikeInfo <- ERROR
+	} else {
+		deleteCommentLikeInfo <- SUCCESS
+	}
+}
+
 func DeleteUserCommentByID(id int) string {
 	sql := "delete from user_comment where id=?"
 	deleteCommentInfo := make(chan string)
 	deleteCommentLikeInfo := make(chan string)
+	deleteCommentMessageInfo := make(chan string)
 	go deleteUserCommentReplyByCommentIDChan(id, deleteCommentInfo)
 	go deleteFromUserCommentLikeByCommentIDChan(id, deleteCommentLikeInfo)
+	go deleteUserCommentMessageByCommentIDChan(id, deleteCommentMessageInfo)
 	_, err := DB.Exec(sql, id)
 	commentInfo := <-deleteCommentInfo
 	likeInfo := <-deleteCommentLikeInfo
@@ -206,6 +245,9 @@ func DeleteUserCommentByID(id int) string {
 	}
 	if likeInfo == ERROR {
 		log.Println("删除用户like有误")
+	}
+	if <-deleteCommentMessageInfo == ERROR {
+		log.Println("删除用户回复列表有误")
 	}
 	if err != nil {
 		return ERROR
@@ -312,94 +354,6 @@ func GetUserCommentIdByUser(userID int) string {
 	jsonString := string(resultjson)
 	return jsonString
 }
-
-func GetUserCommentInformationByUser(userID int, start int) string {
-	sql := "SELECT user_comment.id,user_id,user_name,comment_time,comment_title,comment_content,comment_image_url from user_comment,user_info where user_id in (select focus_fansID from my_focus where focus_userID=?) and user_id=user_info.ID order by id DESC LIMIT ?,20"
-	rows, err := DB.Query(sql, userID, start)
-	defer rows.Close()
-	if err != nil {
-		log.Panicln(err.Error())
-		return ERROR
-	}
-	resultList := make([]UserCommentData, 20)
-	var count = 0
-	for i := 0; rows.Next(); i++ {
-		var data UserCommentData
-		err := rows.Scan(&data.ID, &data.UserID, &data.UserName, &data.CommentTime, &data.CommentTitle, &data.ComemntContent, &data.ImageURL)
-		if err != nil {
-			log.Println(err.Error())
-			return ERROR
-		}
-		data.IsLike = GetUserIsLike(userID, data.ID)
-		data.IsFollow = IsUserFollow(userID, data.UserID)
-		sql = "SELECT COUNT(*) from user_comment_like where commentID=?"
-		err = DB.QueryRow(sql, data.ID).Scan(&data.LikeNum)
-		if err != nil {
-			log.Println(err.Error())
-			data.LikeNum = 0
-		}
-		sql = "SELECT COUNT(*) from user_comment_reply where comment_ID=?"
-		err = DB.QueryRow(sql, data.ID).Scan(&data.ReplyNum)
-		if err != nil {
-			log.Println(err.Error())
-			data.ReplyNum = 0
-		}
-		resultList[i] = data
-		count = i
-	}
-	jsonResult, err := json.Marshal(resultList[0 : count+1])
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	jsonString := string(jsonResult)
-	return jsonString
-}
-
-func GetUserCommentInformaitonByOwn(userID int, start int) string {
-	sql := "SELECT user_comment.id,user_id,user_name,comment_time,comment_title,comment_content,comment_image_url " +
-		"from user_comment,user_info where user_id=? and user_id=user_info.id order by id DESC LIMIT ?,20"
-	rows, err := DB.Query(sql, userID, start)
-	defer rows.Close()
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	resultList := make([]UserCommentData, 20)
-	var count = 0
-	for i := 0; rows.Next(); i++ {
-		var data UserCommentData
-		err := rows.Scan(&data.ID, &data.UserID, &data.UserName, &data.CommentTime, &data.CommentTitle, &data.ComemntContent, &data.ImageURL)
-		if err != nil {
-			log.Println(err.Error())
-			return ERROR
-		}
-		data.IsLike = GetUserIsLike(userID, data.ID)
-		data.IsFollow = IsUserFollow(userID, data.UserID)
-		sql = "SELECT COUNT(*) from user_comment_like where commentID=?"
-		err = DB.QueryRow(sql, data.ID).Scan(&data.LikeNum)
-		if err != nil {
-			log.Println(err.Error())
-			data.LikeNum = 0
-		}
-		sql = "SELECT COUNT(*) from user_comment_reply where comment_ID=?"
-		err = DB.QueryRow(sql, data.ID).Scan(&data.ReplyNum)
-		if err != nil {
-			log.Println(err.Error())
-			data.ReplyNum = 0
-		}
-		resultList[i] = data
-		count = i
-	}
-	jsonResult, err := json.Marshal(resultList[0 : count+1])
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	jsonString := string(jsonResult)
-	return jsonString
-}
-
 func getAllUserCommentInfoClass(userID int, commentID int) (UserCommentData, error) {
 	sql := "SELECT user_comment.id,user_id,user_name,comment_time,comment_title,comment_content,comment_image_url from user_comment,user_info where user_comment.id=? and user_id=user_info.id"
 	var data UserCommentData
@@ -452,7 +406,7 @@ func GetUserCommentCount(commentID int, replyType int) int {
 	if replyType == miniReply {
 		return 3
 	}
-	sql := "SELECT count(*) from user_comment_reply where comment_ID=?"
+	sql := "SELECT count(reply_ID) from user_comment_reply where comment_ID=?"
 	var count int
 	err := DB.QueryRow(sql, commentID).Scan(&count)
 	if err != nil {

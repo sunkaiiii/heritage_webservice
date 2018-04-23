@@ -13,17 +13,6 @@ func GetFindActivityID(c *gin.Context) {
 	return
 }
 
-func GetFindActivityInformation(c *gin.Context) {
-	id, err := strconv.Atoi(c.Query("id"))
-	if err != nil {
-		c.String(200, ERROR)
-		return
-	}
-	log.Println("获取 " + strconv.Itoa(id) + "信息")
-	c.String(200, models.GetFindActivityInformation(id))
-	return
-}
-
 func AddUserCommentInformation(c *gin.Context) {
 	userID, err := strconv.Atoi(c.PostForm("userID"))
 	if err != nil {
@@ -159,6 +148,23 @@ func GetUserCommentInformaitonByOwn(c *gin.Context) {
 		return
 	}
 	c.String(200, models.GetUserCommentInformaitonByOwn(userID, start))
+}
+
+func GetUserCommentInformationBySameLocation(c *gin.Context) {
+	userID, err := strconv.Atoi(c.Query("userID"))
+	if err != nil {
+		log.Println("id有误")
+		c.String(200, ERROR)
+		return
+	}
+	start, err := strconv.Atoi(c.Query("start"))
+	if err != nil {
+		log.Println("start有误")
+		c.String(200, ERROR)
+		return
+	}
+	location := c.Query("location")
+	c.String(200, models.GetUserCommentInformationBySameLocation(userID, start, location))
 }
 
 func GetAllUserCommentInfoByID(c *gin.Context) {

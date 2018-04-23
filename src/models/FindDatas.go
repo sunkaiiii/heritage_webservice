@@ -18,6 +18,7 @@ type UserCommentData struct {
 	LikeNum        int    `json:"likeNum"`
 	ReplyNum       int    `json:"replyNum"`
 	ImageURL       string `json:"imageUrl"`
+	Location       string `json:"location"`
 }
 
 type ReplyInformation struct {
