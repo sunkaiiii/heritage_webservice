@@ -33,7 +33,8 @@ func AddUserCommentInformation(c *gin.Context) {
 	commentTitle := c.PostForm("commentTitle")
 	commentContent := c.PostForm("commentContent")
 	commentImage := c.PostForm("commentImage")
-	result := models.AddUserCommentInformation(userID, commentTitle, commentContent, commentImage)
+	location := c.PostForm("location")
+	result := models.AddUserCommentInformation(userID, commentTitle, commentContent, commentImage, location)
 	if SUCCESS == result {
 		log.Println("用户：" + strconv.Itoa(userID) + "添加了comment " + commentTitle)
 	} else {

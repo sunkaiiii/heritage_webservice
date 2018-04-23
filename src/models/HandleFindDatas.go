@@ -79,8 +79,8 @@ func GetFindActivityInformation(id int) string {
 	return string(jsonString)
 }
 
-func AddUserCommentInformation(userID int, commentTitle string, commentContent string, commentImage string) string {
-	sql := "insert into user_comment(user_id,comment_time,comment_title,comment_content,comment_image_url) VALUES (?,?,?,?,?)"
+func AddUserCommentInformation(userID int, commentTitle string, commentContent string, commentImage string, location string) string {
+	sql := "insert into user_comment(user_id,comment_time,comment_title,comment_content,comment_image_url,comment_location) VALUES (?,?,?,?,?,?)"
 	imageByte, err := base64.StdEncoding.DecodeString(commentImage)
 	if err != nil {
 		log.Println(err.Error())
@@ -92,7 +92,7 @@ func AddUserCommentInformation(userID int, commentTitle string, commentContent s
 		return ERROR
 	}
 	commentTime := time.Now().Format("2006-01-02 15:04:05")
-	_, err = DB.Exec(sql, userID, commentTime, commentTitle, commentContent, commentImageUrl)
+	_, err = DB.Exec(sql, userID, commentTime, commentTitle, commentContent, commentImageUrl, location)
 	if err != nil {
 		log.Println(err.Error())
 		return ERROR
