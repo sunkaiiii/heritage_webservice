@@ -81,5 +81,5 @@ func main() {
 	router.POST("/AddPushMessage", controllers.AddPushMessage)
 	router.GET("/GetPushMessage", controllers.GetPushMessage)
 	router.GET("/GetAllPushReplyInfo", controllers.GetAllPushReplyInfo)
-	router.Run()
+	router.RunTLS(":8080", "./models/1_sunkai.xyz_bundle.crt", "./models/2_sunkai.xyz.key")
 }
