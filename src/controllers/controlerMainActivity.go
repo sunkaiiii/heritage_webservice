@@ -40,3 +40,23 @@ func SearchChannelForkInfo(c *gin.Context) {
 	log.Println("搜索:" + searchInfo)
 	c.String(200, models.SearchChannelForkInfo(searchInfo))
 }
+
+func SearchBottomNewsInformation(c *gin.Context) {
+	searchInfo := c.Query("searchInfo")
+	if searchInfo == "" {
+		c.String(200, ERROR)
+		return
+	}
+	log.Println("搜索聚焦非遗：" + searchInfo)
+	c.String(200, models.SearchBottomNewsInformation(searchInfo))
+}
+
+func SearchFolkNewsInformaiton(c *gin.Context) {
+	searchInfo := c.Query("searchInfo")
+	if searchInfo == "" {
+		c.String(200, ERROR)
+		return
+	}
+	log.Println("搜索全部新闻：" + searchInfo)
+	c.String(200, models.SearchFolkNewsInformaiton(searchInfo))
+}

@@ -81,6 +81,8 @@ func main() {
 	router.POST("/AddPushMessage", controllers.AddPushMessage)
 	router.GET("/GetPushMessage", controllers.GetPushMessage)
 	router.GET("/GetAllPushReplyInfo", controllers.GetAllPushReplyInfo)
+	router.GET("/SearchBottomNewsInformation", controllers.SearchBottomNewsInformation)
+	router.GET("/SearchFolkNewsInformaiton", controllers.SearchFolkNewsInformaiton)
 	go router.RunTLS(":8081", "./models/1_sunkai.xyz_bundle.crt", "./models/2_sunkai.xyz.key")
 	router.Run()
 }

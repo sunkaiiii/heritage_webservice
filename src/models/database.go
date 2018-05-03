@@ -33,8 +33,8 @@ func InitDB() (*sql.DB, error) {
 	}
 	DB = db
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		DB:       0,
+		Addr: "localhost:6379",
+		DB:   0,
 	})
 	pong, err := client.Ping().Result()
 	log.Println(pong)
