@@ -559,3 +559,20 @@ func GetUserLikeComment(userID int) string {
 	log.Println("用户：" + strconv.Itoa(userID) + " 获取我的赞")
 	return jsonString
 }
+
+func SearchUserCommentInfo(searchInfo string, userID int) string {
+	sql := "SELECT  user_comment.id,user_id,user_name,comment_time,comment_title,comment_content,comment_image_url,comment_location " +
+		"from user_comment,user_info where user_id=user_info.ID and comment_title like ? order by id DESC LIMIT 0,20"
+	rows, err := DB.Query(sql, "%"+searchInfo+"%")
+	defer rows.Close()
+	if err != nil {
+		log.Println(err.Error())
+		return ERROR
+	}
+	resultArray := make([]UserCommentData, 20)
+	count, err := getCommentInformation(userID, &resultArray, rows)
+	if err != nil {
+		return ERROR
+	}
+	return masharlData(resultArray[0:count])
+}

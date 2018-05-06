@@ -304,3 +304,20 @@ func GetUserLikeComment(c *gin.Context) {
 	}
 	c.String(200, models.GetUserLikeComment(userID))
 }
+
+func SearchUserCommentInfo(c *gin.Context) {
+	userID, err := strconv.Atoi(c.Query("userID"))
+	if err != nil {
+		log.Println("userID有误")
+		c.String(200, ERROR)
+		return
+	}
+	searhInfo := c.Query("searchInfo")
+	if searhInfo == "" {
+		log.Println("帖子搜索信息有误")
+		c.String(200, ERROR)
+		return
+	}
+	log.Println("搜索帖子:" + searhInfo)
+	c.String(200, models.SearchUserCommentInfo(searhInfo, userID))
+}
