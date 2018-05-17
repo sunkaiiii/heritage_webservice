@@ -103,7 +103,7 @@ func GetUserIsLike(userID int, commentID int) string {
 	return ERROR
 }
 
-func getCommentInformation(userID int, resultArray *[]UserCommentData, rows *sql.Rows) (int, error) {
+func getCommentInformation(userID int, resultArray *[](*UserCommentData), rows *sql.Rows) (int, error) {
 	count := 0
 	for rows.Next() {
 		var data UserCommentData
@@ -116,7 +116,7 @@ func getCommentInformation(userID int, resultArray *[]UserCommentData, rows *sql
 		data.IsLike = GetUserIsLike(userID, data.ID)
 		data.LikeNum = GetCommentLikeNumber(data.ID)
 		data.ReplyNum = GetUserCommentCount(data.ID, normalReply)
-		(*resultArray)[count] = data
+		(*resultArray)[count] = &data
 		count++
 	}
 	return count, nil
@@ -141,7 +141,7 @@ func GetUserCommentInformation(userID int, start int) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultArray := make([]UserCommentData, 20)
+	resultArray := make([](*UserCommentData), 20)
 	count, err := getCommentInformation(userID, &resultArray, rows)
 	if err != nil {
 		return ERROR
@@ -156,7 +156,7 @@ func GetUserCommentInformationByUser(userID int, start int) string {
 		log.Panicln(err.Error())
 		return ERROR
 	}
-	resultList := make([]UserCommentData, 20)
+	resultList := make([](*UserCommentData), 20)
 	count, err := getCommentInformation(userID, &resultList, rows)
 	if err != nil {
 		return ERROR
@@ -173,7 +173,7 @@ func GetUserCommentInformaitonByOwn(userID int, start int) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultList := make([]UserCommentData, 20)
+	resultList := make([](*UserCommentData), 20)
 	count, err := getCommentInformation(userID, &resultList, rows)
 	if err != nil {
 		return ERROR
@@ -190,7 +190,7 @@ func GetUserCommentInformationBySameLocation(userID int, start int, location str
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultList := make([]UserCommentData, 20)
+	resultList := make([](*UserCommentData), 20)
 	count, err := getCommentInformation(userID, &resultList, rows)
 	if err != nil {
 		return ERROR
@@ -569,7 +569,7 @@ func SearchUserCommentInfo(searchInfo string, userID int) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultArray := make([]UserCommentData, 20)
+	resultArray := make([](*UserCommentData), 20)
 	count, err := getCommentInformation(userID, &resultArray, rows)
 	if err != nil {
 		return ERROR

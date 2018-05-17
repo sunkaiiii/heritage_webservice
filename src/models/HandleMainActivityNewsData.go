@@ -2,12 +2,11 @@ package models
 
 import (
 	"database/sql"
-	"encoding/json"
 	"log"
 	"strconv"
 )
 
-func getFolkNewsData(rows *sql.Rows, resultList *[]FolkNewsLite) (int, error) {
+func getFolkNewsData(rows *sql.Rows, resultList *[](*FolkNewsLite)) (int, error) {
 	count := 0
 	for rows.Next() {
 		var data FolkNewsLite
@@ -15,7 +14,7 @@ func getFolkNewsData(rows *sql.Rows, resultList *[]FolkNewsLite) (int, error) {
 		if err != nil {
 			return -1, err
 		}
-		(*resultList)[count] = data
+		(*resultList)[count] = &data
 		count++
 	}
 	return count, nil
@@ -23,7 +22,7 @@ func getFolkNewsData(rows *sql.Rows, resultList *[]FolkNewsLite) (int, error) {
 
 func GetFolkNewsList(category string, start int, count int) string {
 	key := "MainActivityNews" + category + strconv.Itoa(start) + "_" + strconv.Itoa(count)
-	result, err := RedisDB.Get(key).Result()
+	result, err := GetRedisKey(key)
 	if err == nil {
 		return result
 	}
@@ -34,12 +33,9 @@ func GetFolkNewsList(category string, start int, count int) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultList := make([]FolkNewsLite, count)
+	resultList := make([](*FolkNewsLite), count)
 	count, err = getFolkNewsData(rows, &resultList)
 	jsonResult := masharlData(resultList[0:count])
-	if jsonResult == ERROR {
-		return ERROR
-	}
 	SetRedisKey(key, jsonResult)
 	return jsonResult
 }
@@ -53,18 +49,14 @@ func getFolkNewsDataClass(id int) (FolkNewsLite, error) {
 
 func GetFolkNewsInformation(id int) string {
 	key := "folknewsInformation" + "_" + strconv.Itoa(id)
-	result, err := RedisDB.Get(key).Result()
+	result, err := GetRedisKey(key)
 	if err == nil {
 		return result
 	}
 	sql := "select details from folk_news where id=?"
 	var data string
 	err = DB.QueryRow(sql, id).Scan(&data)
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	RedisDB.Set(key, data, 0)
+	SetRedisKey(key, data)
 	return data
 }
 func getBottomNewsInformationClassByID(id int) (BottomNewsLite, error) {
@@ -74,7 +66,7 @@ func getBottomNewsInformationClassByID(id int) (BottomNewsLite, error) {
 	return data, err
 }
 
-func getBottomNewsData(rows *sql.Rows, resultList *[]BottomNewsLite) (int, error) {
+func getBottomNewsData(rows *sql.Rows, resultList *[](*BottomNewsLite)) (int, error) {
 	count := 0
 	for i := 0; rows.Next(); i++ {
 		var data BottomNewsLite
@@ -83,7 +75,7 @@ func getBottomNewsData(rows *sql.Rows, resultList *[]BottomNewsLite) (int, error
 			log.Println(err.Error())
 			return count, err
 		}
-		(*resultList)[count] = data
+		(*resultList)[count] = &data
 		count++
 	}
 	return count, nil
@@ -91,7 +83,7 @@ func getBottomNewsData(rows *sql.Rows, resultList *[]BottomNewsLite) (int, error
 
 func GetBottomNewsLiteInformation(start int, count int) string {
 	key := "bottomNewsLiteInfor_" + strconv.Itoa(start) + "_" + strconv.Itoa(count)
-	result, err := RedisDB.Get(key).Result()
+	result, err := GetRedisKey(key)
 	if err == nil {
 		return result
 	}
@@ -102,16 +94,18 @@ func GetBottomNewsLiteInformation(start int, count int) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultList := make([]BottomNewsLite, count)
+	resultList := make([](*BottomNewsLite), count)
 	count, err = getBottomNewsData(rows, &resultList)
 	jsonString := masharlData(resultList[0:count])
-	RedisDB.Set(key, jsonString, 0)
+	if jsonString != ERROR {
+		RedisDB.Set(key, jsonString, 0)
+	}
 	return jsonString
 }
 
 func GetBottomNewsInformationByID(id int) string {
 	key := "getBottomNewsInformationById_" + strconv.Itoa(id)
-	result, err := RedisDB.Get(key).Result()
+	result, err := GetRedisKey(key)
 	if err == nil {
 		return result
 	}
@@ -122,19 +116,14 @@ func GetBottomNewsInformationByID(id int) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	jsonResult, err := json.Marshal(data)
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	jsonString := string(jsonResult)
-	RedisDB.Set(key, jsonString, 0)
+	jsonString := masharlData(data)
+	SetRedisKey(key, jsonString)
 	return jsonString
 }
 
 func GetMainPageSlideNewsInformation() string {
 	key := "MainPageSlideNews"
-	result, err := RedisDB.Get(key).Result()
+	result, err := GetRedisKey(key)
 	if err == nil {
 		return result
 	}
@@ -145,7 +134,7 @@ func GetMainPageSlideNewsInformation() string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultList := make([]MainPageSlideNews, 5)
+	resultList := make([](*MainPageSlideNews), 5)
 	for i := 0; rows.Next(); i++ {
 		var data MainPageSlideNews
 		err = rows.Scan(&data.ID, &data.Content, &data.Img, &data.Detail)
@@ -153,15 +142,12 @@ func GetMainPageSlideNewsInformation() string {
 			log.Println(err.Error())
 			return ERROR
 		}
-		resultList[i] = data
+		resultList[i] = &data
 	}
-	jsonResult, err := json.Marshal(resultList)
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
+	jsonString := masharlData(resultList)
+	if jsonString != ERROR {
+		RedisDB.Set(key, jsonString, 0)
 	}
-	jsonString := string(jsonResult)
-	RedisDB.Set(key, jsonString, 0)
 	return jsonString
 }
 
@@ -179,7 +165,7 @@ func SearchBottomNewsInformation(searchString string) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultList := make([]BottomNewsLite, 50)
+	resultList := make([](*BottomNewsLite), 50)
 	count, err := getBottomNewsData(rows, &resultList)
 	if err != nil {
 		log.Println(err.Error())
@@ -206,7 +192,7 @@ func SearchFolkNewsInformaiton(searhString string) string {
 		return ERROR
 	}
 	defer rows.Close()
-	resultList := make([]FolkNewsLite, 50)
+	resultList := make([](*FolkNewsLite), 50)
 	count, err := getFolkNewsData(rows, &resultList)
 	if err != nil {
 		log.Println(err.Error())

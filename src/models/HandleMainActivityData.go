@@ -1,14 +1,13 @@
 package models
 
 import (
-	"encoding/json"
 	"log"
 	"strconv"
 )
 
 func GetMainDivideActivityImageUrl() string {
 	key := "MainDivideActivityImageUrl"
-	result, err := RedisDB.Get(key).Result()
+	result, err := GetRedisKey(key)
 	if err == nil {
 		return result
 	}
@@ -18,7 +17,7 @@ func GetMainDivideActivityImageUrl() string {
 	if err != nil {
 		return ERROR
 	}
-	resultArray := make([]ActivityDivideImage, 5, 20)
+	resultArray := make([](*ActivityDivideImage), 5, 20)
 	count := 0
 	for rows.Next() {
 		var data ActivityDivideImage
@@ -26,13 +25,12 @@ func GetMainDivideActivityImageUrl() string {
 		if err != nil {
 			return ERROR
 		}
-		resultArray[count] = data
+		resultArray[count] = &data
 		count++
 	}
-	json, _ := json.Marshal(resultArray)
-	result = string(json)
-	RedisDB.Set(key, result, 0)
-	return string(json)
+	jsonString := masharlData(resultArray[0:count])
+	SetRedisKey(key, jsonString)
+	return jsonString
 }
 
 func getChannelInformationSingleClass(id int) (ChannelInformaiton, error) {
@@ -54,25 +52,18 @@ func GetChannelInformation(divide string) string {
 	if err != nil {
 		return ERROR
 	}
-	resultArray := make([]ChannelInformaiton, 2000)
-	count := 0
+	var resultArray [](*ChannelInformaiton)
 	for rows.Next() {
 		var data ChannelInformaiton
 		err = rows.Scan(&data.Id, &data.Time, &data.Category, &data.Location, &data.Apply_location, &data.Content, &data.Number, &data.Img, &data.Title)
 		if err != nil {
 			return ERROR
 		}
-		resultArray[count] = data
-		count++
+		resultArray = append(resultArray, &data)
 	}
-	resultJson, err := json.Marshal(resultArray[0:count])
-	if err != nil {
-		return ERROR
-	} else {
-		result := string(resultJson)
-		RedisDB.Set(key, result, 0)
-		return result
-	}
+	jsonString := masharlData(resultArray)
+	SetRedisKey(key, jsonString)
+	return jsonString
 }
 
 func GetChannelFolkInformation() string {
@@ -88,8 +79,7 @@ func GetChannelFolkInformation() string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultArray := make([]ChannelForkInformationLite, 5000)
-	count := 0
+	var resultArray [](*ChannelForkInformationLite)
 	for rows.Next() {
 		var data ChannelForkInformationLite
 		err = rows.Scan(&data.Id, &data.Divide, &data.Title, &data.Apply_location, &data.Img, &data.Category)
@@ -97,16 +87,11 @@ func GetChannelFolkInformation() string {
 			log.Println(err.Error())
 			return ERROR
 		}
-		resultArray[count] = data
-		count++
+		resultArray = append(resultArray, &data)
 	}
-	resultJson, err := json.Marshal(resultArray[0:count])
-	if err != nil {
-		return ERROR
-	}
-	resultString := string(resultJson)
-	RedisDB.Set(key, resultString, 0)
-	return resultString
+	jsonString := masharlData(resultArray)
+	SetRedisKey(key, jsonString)
+	return jsonString
 
 }
 
@@ -123,13 +108,8 @@ func GetChannelFolkSingleInformation(id int) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	jsonReuslt, err := json.Marshal(data)
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	jsonString := string(jsonReuslt)
-	RedisDB.Set(key, jsonString, 0)
+	jsonString := masharlData(data)
+	SetRedisKey(key, jsonString)
 	return jsonString
 }
 
@@ -147,8 +127,7 @@ func SearchChannelForkInfo(searchInfo string) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultArray := make([]ChannelForkInformationLite, 5000)
-	count := 0
+	var resultArray [](*ChannelForkInformationLite)
 	for rows.Next() {
 		var data ChannelForkInformationLite
 		err = rows.Scan(&data.Id, &data.Divide, &data.Title, &data.Apply_location, &data.Img, &data.Category)
@@ -156,15 +135,9 @@ func SearchChannelForkInfo(searchInfo string) string {
 			log.Println(err.Error())
 			return ERROR
 		}
-		resultArray[count] = data
-		count++
+		resultArray = append(resultArray, &data)
 	}
-	jsonResult, err := json.Marshal(resultArray[0:count])
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	jsonString := string(jsonResult)
-	RedisDB.Set(key, jsonString, 0)
+	jsonString := masharlData(resultArray)
+	SetRedisKey(key, jsonString)
 	return jsonString
 }
