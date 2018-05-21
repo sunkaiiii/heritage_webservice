@@ -417,11 +417,7 @@ func GetUserCommentCount(commentID int, replyType int) int {
 }
 
 func GetUserCommentReply(commentID int, replyType int) string {
-	count := GetUserCommentCount(commentID, replyType)
-	if count == 0 {
-		return ERROR
-	}
-	sql := ""
+	var sql string
 	if replyType == normalReply {
 		sql = "SELECT reply_id,reply_time,comment_ID,user_id,user_name,reply_content from user_comment_reply,user_info where comment_ID=? and user_info.id=user_id"
 	} else {
@@ -433,7 +429,7 @@ func GetUserCommentReply(commentID int, replyType int) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultList := make([]ReplyInformation, count)
+	var resultList [](*ReplyInformation)
 	for i := 0; rows.Next(); i++ {
 		var data ReplyInformation
 		err := rows.Scan(&data.ID, &data.ReplyTime, &data.CommentID, &data.UserID, &data.UserName, &data.ReplyContent)
@@ -441,15 +437,9 @@ func GetUserCommentReply(commentID int, replyType int) string {
 			log.Println(err.Error())
 			return ERROR
 		}
-		resultList[i] = data
+		resultList = append(resultList, &data)
 	}
-	jsonResult, err := json.Marshal(resultList)
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	jsonString := string(jsonResult)
-	return jsonString
+	return masharlData(resultList)
 }
 
 func SetUserLike(userID int, commentID int) string {
@@ -522,21 +512,14 @@ func DeleteUserCommentReply(replyID int) string {
 }
 
 func GetUserLikeComment(userID int) string {
-	sql := "select COUNT(id) from user_comment_like where userID=?"
-	var count int
-	err := DB.QueryRow(sql, userID).Scan(&count)
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	sql = "select commentID from user_comment_like where userID=?"
+	sql := "select commentID from user_comment_like where userID=?"
 	rows, err := DB.Query(sql, userID)
 	if err != nil {
 		log.Println(err.Error())
 		return ERROR
 	}
 	defer rows.Close()
-	var resultList = make([]UserCommentData, count)
+	var resultList [](*UserCommentData)
 	for i := 0; rows.Next(); i++ {
 		var commentID int
 		err := rows.Scan(&commentID)
@@ -548,16 +531,9 @@ func GetUserLikeComment(userID int) string {
 		if err != nil {
 			return ERROR
 		}
-		resultList[i] = data
+		resultList = append(resultList, &data)
 	}
-	jsonResult, err := json.Marshal(resultList)
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	jsonString := string(jsonResult)
-	log.Println("用户：" + strconv.Itoa(userID) + " 获取我的赞")
-	return jsonString
+	return masharlData(resultList)
 }
 
 func SearchUserCommentInfo(searchInfo string, userID int) string {

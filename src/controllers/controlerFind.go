@@ -302,6 +302,7 @@ func GetUserLikeComment(c *gin.Context) {
 		c.String(200, ERROR)
 		return
 	}
+	log.Println("用户：" + strconv.Itoa(userID) + " 获取我的赞")
 	c.String(200, models.GetUserLikeComment(userID))
 }
 

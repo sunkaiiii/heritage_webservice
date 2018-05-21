@@ -224,6 +224,7 @@ func GetUserCollection(c *gin.Context) {
 		return
 	}
 	collectType := c.Query("type")
+	log.Println("用户:" + strconv.Itoa(userID) + "查询collect" + collectType)
 	c.String(200, models.GetUserCollection(userID, collectType))
 }
 

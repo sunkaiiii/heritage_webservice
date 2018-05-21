@@ -96,7 +96,7 @@ func SendSinglePushMessageInfo(userID int) string {
 }
 
 func GetPushMessageInfo(userID int) string {
-	sql := "select id,userID,userName,replyCommentID,replyContent,replyTime,originalReplyContent from user_comment_push_reply where replyToUserID=?"
+	sql := "select id,userID,userName,replyCommentID,replyContent,replyTime,originalReplyContent from user_comment_push_reply where replyToUserID=? order by id DESC"
 	rows, err := DB.Query(sql, userID)
 	defer rows.Close()
 	if err != nil {

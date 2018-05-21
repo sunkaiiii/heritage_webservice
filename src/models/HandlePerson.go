@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"log"
@@ -95,13 +96,30 @@ func GetUserAllInfo(userID int) string {
 	data.FansNumber = GetFansNumber(userID)
 	data.Permission = GetUserPermission(userID)
 	data.FocusAndFansPermission = GetUserFocusAndFansViewPermission(userID)
-	jsonResult, err := json.Marshal(data)
+	return masharlData(data)
+}
+
+func readUserListInformation(rows *sql.Rows) ([](*FollowInformation), error) {
+	var resultList [](*FollowInformation)
+	for rows.Next() {
+		var data FollowInformation
+		err := rows.Scan(&data.FocusFansID, &data.UserName, &data.FocusFocusID)
+		if err != nil {
+			return nil, err
+		}
+		data.Checked = (SUCCESS == IsUserFollow(data.FocusFocusID, data.FocusFansID))
+		resultList = append(resultList, &data)
+	}
+	return resultList, nil
+}
+
+func handleUserListInformation(rows *sql.Rows) string {
+	resultList, err := readUserListInformation(rows)
 	if err != nil {
 		log.Println(err.Error())
 		return ERROR
 	}
-	jsonString := string(jsonResult)
-	return jsonString
+	return masharlData(resultList)
 }
 
 func GetFollowInformation(userID int) string {
@@ -116,24 +134,7 @@ func GetFollowInformation(userID int) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultList := make([]FollowInformation, count)
-	for i := 0; rows.Next(); i++ {
-		var data FollowInformation
-		err := rows.Scan(&data.FocusFansID, &data.UserName, &data.FocusFocusID)
-		if err != nil {
-			log.Println(err.Error())
-			return ERROR
-		}
-		data.Checked = (SUCCESS == IsUserFollow(data.FocusFocusID, data.FocusFansID))
-		resultList[i] = data
-	}
-	jsonResult, err := json.Marshal(resultList)
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	jsonString := string(jsonResult)
-	return jsonString
+	return handleUserListInformation(rows)
 }
 
 func GetFansInformation(userID int) string {
@@ -148,24 +149,7 @@ func GetFansInformation(userID int) string {
 		log.Println(err.Error())
 		return ERROR
 	}
-	resultList := make([]FollowInformation, count)
-	for i := 0; rows.Next(); i++ {
-		var data FollowInformation
-		err := rows.Scan(&data.FocusFansID, &data.UserName, &data.FocusFocusID)
-		if err != nil {
-			log.Println(err.Error())
-			return ERROR
-		}
-		data.Checked = (SUCCESS == IsUserFollow(data.FocusFocusID, data.FocusFansID))
-		resultList[i] = data
-	}
-	jsonResult, err := json.Marshal(resultList)
-	if err != nil {
-		log.Println(err.Error())
-		return ERROR
-	}
-	jsonString := string(jsonResult)
-	return jsonString
+	return handleUserListInformation(rows)
 }
 
 func AddFocus(userID int, focusID int) string {
@@ -377,17 +361,18 @@ func GetUserCollection(userID int, collectionType string) string {
 		}
 		resultList[i] = data
 	}
-	if collectionType == TYPE_FOLK {
+	switch collectionType {
+	case TYPE_FOLK:
 		return getFolkCollectionInfo(resultList, count)
-	} else if collectionType == TYPE_MAIN {
+	case TYPE_MAIN:
 		return getMainPageCollectInfo(resultList, count)
-	} else if collectionType == TYPE_FOCUS_HERITAGE {
+	case TYPE_FOCUS_HERITAGE:
 		return getBottomNewsCollectInfo(resultList, count)
-	} else if collectionType == TYPE_FIND {
+	case TYPE_FIND:
 		return getFindCollectInfo(userID, resultList, count)
+	default:
+		return ERROR
 	}
-	log.Println("用户:" + strconv.Itoa(userID) + "查询collect" + collectionType)
-	return ERROR
 }
 
 func CheckIsCollection(userID int, typeName string, typeID int) string {
