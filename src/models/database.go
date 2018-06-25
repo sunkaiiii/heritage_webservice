@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"database/sql"
+	"encoding/base64"
 	"encoding/pem"
 	"errors"
 	"log"
@@ -43,6 +44,22 @@ func InitDB() (*sql.DB, error) {
 	}
 	RedisDB = client
 	return db, err
+}
+
+func UpdatePassword() {
+	sql := "select ID,USER_PASSWORD from user_info"
+	rows, _ := DB.Query(sql)
+	defer rows.Close()
+	var id int
+	var password string
+	for rows.Next() {
+		rows.Scan(&id, &password)
+		passwordByte, _ := base64.StdEncoding.DecodeString(password)
+		encryptPassword, _ := RsaDecrypt(passwordByte)
+		shaPassword := shaHashData(encryptPassword)
+		sql2 := "update user_info set USER_PASSWORD=? where ID=? "
+		DB.Exec(sql2, shaPassword, id)
+	}
 }
 
 // 加密

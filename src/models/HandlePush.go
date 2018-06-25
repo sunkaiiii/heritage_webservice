@@ -151,6 +151,7 @@ func handleConnect(c net.Conn, socketID int) {
 	}
 	userID := string(buf[0:n])
 	log.Println("用户连接:" + userID)
+	defer log.Println("socket:" + strconv.Itoa(socketID) + " close")
 	SetRedisKey(push_user_id+userID, strconv.Itoa(socketID))
 	defer DeleteRedisKey(push_user_id + userID)
 	if err != nil {
@@ -165,7 +166,6 @@ func handleConnect(c net.Conn, socketID int) {
 		}
 		log.Println(string(buf[0:n]))
 	}
-	defer log.Println("socket:" + strconv.Itoa(socketID) + " close")
 }
 
 func updateIsPushStateBySingle(id int64) {

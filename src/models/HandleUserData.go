@@ -1,10 +1,11 @@
 package models
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"log"
-	"strings"
 )
 
 const userImgDir = "./img/user_img/"
@@ -17,44 +18,68 @@ func saveUserImage(imageByte []byte) (bool, string) {
 func PostDataEncrypt(postData string, dataChan chan string) {
 	userPasswordByte, err := base64.StdEncoding.DecodeString(postData)
 	if err != nil {
-		log.Println("userPassWordByte err")
+		log.Println("getUserPassword err")
 		dataChan <- ""
 	}
 	userPasswordByte, err = RsaDecrypt(userPasswordByte)
 	if err != nil {
-		log.Println("userPasswordByte2 err")
+		log.Println(err.Error())
 		dataChan <- ""
 	}
-	userPassword := base64.StdEncoding.EncodeToString(userPasswordByte)
-	dataChan <- userPassword
+	hashUserPassword := shaHashData(userPasswordByte)
+	dataChan <- hashUserPassword
 }
 
-func sqlDataEncrypt(getSqlData string, dataChan chan string) {
-	sqlByte, err := base64.StdEncoding.DecodeString(getSqlData)
+func shaHashData(data []byte) string {
+	shaHash := sha256.New()
+	result := shaHash.Sum(data)
+	return hex.EncodeToString(result)
+}
+
+// func sqlDataEncrypt(getSqlData string, dataChan chan string) {
+// 	sqlByte, err := base64.StdEncoding.DecodeString(getSqlData)
+// 	if err != nil {
+// 		log.Println("sqlByte err")
+// 		dataChan <- ""
+// 	}
+// 	sqlByte, err = RsaDecrypt(sqlByte)
+// 	if err != nil {
+// 		log.Println("sqlByte2 err")
+// 		dataChan <- ""
+// 	}
+// 	sqlPassword := base64.StdEncoding.EncodeToString(sqlByte)
+// 	dataChan <- sqlPassword
+// }
+
+func getUserPasswordFromSql(userName string, sqlpasswordChannel chan string, userID chan int) {
+	sql := "select id,USER_PASSWORD from user_info where USER_NAME=?"
+	rows, err := DB.Query(sql, userName)
+	defer rows.Close()
 	if err != nil {
-		log.Println("sqlByte err")
-		dataChan <- ""
+		log.Println(err.Error())
+		sqlpasswordChannel <- ""
+		userID <- -1
+		return
 	}
-	sqlByte, err = RsaDecrypt(sqlByte)
-	if err != nil {
-		log.Println("sqlByte2 err")
-		dataChan <- ""
+	var getPassword string
+	var id int
+	if rows.Next() {
+		err := rows.Scan(&id, &getPassword)
+		if err != nil {
+			sqlpasswordChannel <- ""
+			userID <- -1
+			return
+		}
 	}
-	sqlPassword := base64.StdEncoding.EncodeToString(sqlByte)
-	dataChan <- sqlPassword
+	userID <- id
+	sqlpasswordChannel <- getPassword
 }
 
 func checkEncryptData(postData string, getSqlData string) (bool, error) {
-	getSqlData = strings.Replace(getSqlData, "\n", "", -1)
-	sqlChan := make(chan string)
-	userChan := make(chan string)
-	go sqlDataEncrypt(getSqlData, sqlChan)
-	go PostDataEncrypt(postData, userChan)
-	sqlPassword := <-sqlChan
-	userPassword := <-userChan
-	log.Println(sqlPassword)
-	log.Println(userPassword)
-	return sqlPassword == userPassword, nil
+	if len(postData) == 0 || len(getSqlData) == 0 {
+		return false, nil
+	}
+	return postData == getSqlData, nil
 }
 
 func SelectUserName(id int64) (string, error) {
@@ -77,26 +102,20 @@ func SelectUserName(id int64) (string, error) {
 }
 
 func Sign_In(userName string, password string) (int, error) {
-	sql := "select id,USER_PASSWORD from user_info where USER_NAME=?"
-	rows, err := DB.Query(sql, userName)
-	if err != nil {
-		log.Println(err.Error())
-		return -1, err
-	}
-	var getPassword string
-	var id int
-	if rows.Next() {
-		err := rows.Scan(&id, &getPassword)
-		if err != nil {
-			return -1, err
-		}
-	}
-	defer rows.Close()
-	result, err := checkEncryptData(password, getPassword)
+	userIDChan := make(chan int)
+	sqlPasswordChan := make(chan string)
+	encryPostPassword := make(chan string)
+	go PostDataEncrypt(password, encryPostPassword)
+	go getUserPasswordFromSql(userName, sqlPasswordChan, userIDChan)
+	userID := <-userIDChan
+	result, err := checkEncryptData(<-encryPostPassword, <-sqlPasswordChan)
 	if err == nil && result {
-		return id, nil
+		log.Println("用户:" + userName + " 登陆成功")
+		return userID, nil
 	}
-	return -1, nil
+	log.Println("用户:" + userName + " 登陆失败")
+	userID = -1
+	return userID, nil
 }
 
 func CheckIsHadUser(username string) (bool, error) {
