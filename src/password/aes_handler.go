@@ -1,4 +1,4 @@
-package models
+package password
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ var ivDefValue string
 var key []byte
 
 func init() {
-	file, err := os.Open("./models/aes_block_key.key")
+	file, err := os.Open("./password/aes_block_key.key")
 	if err != nil {
 		log.Println(err.Error())
 		return
@@ -25,7 +25,7 @@ func init() {
 	}
 	ivDefValue = string(buf[0:n])
 	file.Close()
-	file, err = os.Open("./models/aes_key.key")
+	file, err = os.Open("./password/aes_key.key")
 	if err != nil {
 		log.Println(err.Error())
 		return

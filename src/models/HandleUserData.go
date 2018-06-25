@@ -1,11 +1,11 @@
 package models
 
 import (
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"log"
+
+	PasswordHandler "../password"
 )
 
 const userImgDir = "./img/user_img/"
@@ -21,19 +21,13 @@ func PostDataEncrypt(postData string, dataChan chan string) {
 		log.Println("getUserPassword err")
 		dataChan <- ""
 	}
-	userPasswordByte, err = RsaDecrypt(userPasswordByte)
+	userPasswordByte, err = PasswordHandler.RsaDecrypt(userPasswordByte)
 	if err != nil {
 		log.Println(err.Error())
 		dataChan <- ""
 	}
-	hashUserPassword := shaHashData(userPasswordByte)
+	hashUserPassword := PasswordHandler.ShaHashData(userPasswordByte)
 	dataChan <- hashUserPassword
-}
-
-func shaHashData(data []byte) string {
-	shaHash := sha256.New()
-	result := shaHash.Sum(data)
-	return hex.EncodeToString(result)
 }
 
 // func sqlDataEncrypt(getSqlData string, dataChan chan string) {

@@ -10,8 +10,8 @@ import (
 )
 
 func main() {
-	db, err := models.InitDB()
-	if err != nil {
+	db := models.InitDB()
+	if db == nil {
 		return
 	}
 	defer db.Close()
