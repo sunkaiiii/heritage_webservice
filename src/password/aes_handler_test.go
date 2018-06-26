@@ -5,7 +5,7 @@ import (
 )
 
 func TestAesDecrpt(t *testing.T) {
-	testString := ShaHashData(1, "123", []byte("123"))
+	testString := ShaHashData("123", []byte("123"))
 	//对密码进行加密
 	testResult, err := AesEncrypt([]byte(testString))
 	println(string(testResult))

@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"encoding/base64"
+	"encoding/hex"
 	"log"
 
 	PasswordHandler "../password"
@@ -42,18 +43,27 @@ func InitDB() *sql.DB {
 }
 
 func UpdatePassword() {
-	sql := "select ID,USER_NAME,USER_PASSWORD from user_info"
+	sql := "select ID,USER_NAME,USER_PASSWORD_ANSWER from user_info"
 	rows, _ := DB.Query(sql)
 	defer rows.Close()
 	var id int
-	var username
+	var username string
 	var password string
 	for rows.Next() {
-		rows.Scan(&id,&username, &password)
+		rows.Scan(&id, &username, &password)
 		passwordByte, _ := base64.StdEncoding.DecodeString(password)
 		encryptPassword, _ := PasswordHandler.RsaDecrypt(passwordByte)
-		shaPassword := PasswordHandler.ShaHashData(id,username,ncryptPassword)
-		sql2 := "update user_info set USER_PASSWORD=? where ID=? "
-		DB.Exec(sql2, shaPassword, id)
+		shaPassword := PasswordHandler.ShaHashData(username, encryptPassword)
+		aesPassword, err := PasswordHandler.AesEncrypt([]byte(shaPassword))
+		if err != nil {
+			log.Println(err.Error())
+			continue
+		}
+		sql2 := "update user_info set USER_PASSWORD_ANSWER=? where ID=? "
+		aesPasswordStirng := hex.EncodeToString(aesPassword)
+		_, err = DB.Exec(sql2, aesPasswordStirng, id)
+		if err != nil {
+			log.Println(err.Error())
+		}
 	}
 }

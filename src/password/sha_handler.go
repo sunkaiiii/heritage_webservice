@@ -7,11 +7,15 @@ import (
 )
 
 const ID_REPEAT_COUNT = 5
+const DIVIDE_NUMBER = 7
+const TIME_NUMBER = 13
 
-func ShaHashData(id int, userName string, noEncryptPassword []byte) string {
+func ShaHashData(userName string, noEncryptPassword []byte) string {
 	addSaltPassword := string(noEncryptPassword)
+	passwordLen := len(noEncryptPassword)
+	timeNumber := passwordLen % 7
 	for i := 0; i < ID_REPEAT_COUNT; i++ {
-		addSaltPassword += strconv.Itoa(id)
+		addSaltPassword += strconv.Itoa(timeNumber * i)
 	}
 	addSaltPassword += userName
 	shaHash := sha256.New()
